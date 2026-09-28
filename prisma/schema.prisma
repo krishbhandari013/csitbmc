@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB_URI")
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum AttendanceStatus {
+  P
+  A
+}
+
+model Campus {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  code      String   @unique
+  name      String
+  address   String   @default("")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  users     User[]
+  subjects  Subject[]
+  posts     Post[]
+}
+
+model User {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  role         Role
+  campusId     String   @db.ObjectId
+  campus       Campus   @relation(fields: [campusId], references: [id], onDelete: Cascade)
+  // Student fields
+  rollNumber   String?
+  semester     Int?
+  // Teacher/admin identity
+  username     String?
+  name         String?
+  passwordHash String
+  mustChangePw Boolean  @default(false)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignments  TeacherAssignment[]
+  attendance   AttendanceRecord[]  @relation("StudentAttendance")
+  submissions  SubmissionStatus[]
+}
+
+model Subject {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  campusId    String   @db.ObjectId
+  campus      Campus   @relation(fields: [campusId], references: [id], onDelete: Cascade)
+  semester    Int
+  code        String
+  name        String
+  description String   @default("")
+  createdAt   DateTime @default(now())
+
+  teachers    TeacherAssignment[]
+  topics      CourseTopic[]
+  attendance  AttendanceRecord[]
+  assignments Assignment[]
+}
+
+model TeacherAssignment {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  teacherId String  @db.ObjectId
+  teacher   User    @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subjectId String  @db.ObjectId
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, subjectId])
+}
+
+model CourseTopic {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  subjectId   String   @db.ObjectId
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  title       String
+  order       Int      @default(0)
+  isComplete  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model AttendanceRecord {
+  id        String           @id @default(auto()) @map("_id") @db.ObjectId
+  subjectId String           @db.ObjectId
+  subject   Subject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  studentId String           @db.ObjectId
+  student   User             @relation("StudentAttendance", fields: [studentId], references: [id], onDelete: Cascade)
+  date      DateTime
+  status    AttendanceStatus
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([subjectId, studentId, date])
+  @@index([subjectId, date])
+  @@index([studentId])
+}
+
+model Assignment {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  subjectId   String   @db.ObjectId
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  title       String
+  description String   @default("")
+  dueDate     DateTime
+  link        String   @default("")
+  createdAt   DateTime @default(now())
+  submissions SubmissionStatus[]
+
+  @@index([subjectId, dueDate])
+}
+
+model SubmissionStatus {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  assignmentId String     @db.ObjectId
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    String     @db.ObjectId
+  student      User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  isComplete   Boolean    @default(false)
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([assignmentId, studentId])
+}
+
+// ---------------------------------------------------------------------------
+// ANONYMOUS DISCUSSION BOARD
+// Privacy boundary (enforced in the data model, not just the UI):
+// - Post and Comment store NO authorId, username, role, IP, or user agent.
+// - Votes are stored in a separate collection keyed by a one-way HMAC
+//   (voterKey = HMAC_SHA256(userId + targetId)) so the app can prevent
+//   duplicate votes without a plaintext userId -> post link in the vote row.
+//   NOTE: a database/infrastructure operator with full DB + secret access
+//   could still attempt correlation. Anonymity holds against other users,
+//   teachers, and admins through the app — NOT against network/DB operators.
+// ---------------------------------------------------------------------------
+
+model Post {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  campusId     String    @db.ObjectId
+  campus       Campus    @relation(fields: [campusId], references: [id], onDelete: Cascade)
+  title        String
+  body         String
+  upvoteCount  Int       @default(0)
+  commentCount Int       @default(0)
+  reportCount  Int       @default(0)
+  hidden       Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  comments     Comment[]
+  reports      Report[]
+
+  @@index([campusId, createdAt])
+  @@index([campusId, upvoteCount])
+}
+
+model Comment {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId      String   @db.ObjectId
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  body        String
+  reportCount Int      @default(0)
+  hidden      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  reports     Report[]
+
+  @@index([postId, createdAt])
+}
+
+model Vote {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  // voterKey = HMAC_SHA256(SECRET, userId + ":post:" + postId). No plaintext user id stored.
+  voterKey  String   @unique
+  postId    String   @db.ObjectId
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+}
+
+model Report {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String?  @db.ObjectId
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId String?  @db.ObjectId
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reason    String
+  createdAt DateTime @default(now())
+}

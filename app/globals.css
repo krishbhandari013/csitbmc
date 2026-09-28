@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- CSIT Butwal design tokens ---------- */
+:root {
+  color-scheme: light;
+  --radius-card: 14px;
+  --radius-control: 10px;
+  --shadow-card: 0 1px 2px rgb(15 28 46 / 0.05), 0 1px 3px rgb(15 28 46 / 0.06);
+  --shadow-pop: 0 8px 24px rgb(15 28 46 / 0.14);
+}
+
+html { -webkit-text-size-adjust: 100%; }
+
+body { @apply bg-slate-100 text-slate-900 antialiased; }
+
+::selection { @apply bg-brand-100 text-brand-900; }
+
+/* Visible keyboard focus everywhere */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid theme("colors.brand.500");
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@layer components {
+  .wrap { @apply mx-auto w-full max-w-5xl px-4 sm:px-6; }
+
+  .card { @apply rounded-[14px] border border-slate-200 bg-white; box-shadow: var(--shadow-card); }
+  .card-pad { @apply p-4 sm:p-6; }
+  .card-hover { @apply transition-shadow hover:shadow-md; }
+
+  .page-title { @apply text-xl font-bold tracking-tight sm:text-2xl; }
+  .section-title { @apply text-[17px] font-bold tracking-tight; }
+  .muted { @apply text-sm text-slate-600; }
+  .tiny { @apply text-xs text-slate-500; }
+
+  /* Buttons — 44px minimum touch target */
+  .btn { @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[10px] px-4 py-2 text-sm font-semibold transition-colors select-none disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-700; }
+  .btn-secondary { @apply btn border border-slate-300 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100; }
+  .btn-ghost { @apply btn text-slate-700 hover:bg-slate-200/60 active:bg-slate-200; }
+  .btn-danger { @apply btn bg-rose-600 text-white hover:bg-rose-700; }
+  .btn-sm { @apply min-h-[36px] px-3 py-1.5 text-[13px]; }
+  .icon-btn { @apply inline-flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-[10px] px-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-200/60 active:bg-slate-200; }
+
+  /* Form controls */
+  .label { @apply mb-1.5 block text-sm font-semibold text-slate-800; }
+  .input { @apply w-full min-h-[44px] rounded-[10px] border border-slate-300 bg-white px-3.5 py-2.5 text-[15px] text-slate-900 outline-none transition-shadow placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25; }
+  select.input { @apply pr-9; }
+  textarea.input { @apply min-h-[120px] leading-relaxed; }
+  .hint { @apply mt-1.5 text-[13px] leading-snug text-slate-500; }
+  .field-error { @apply mt-1.5 flex items-start gap-1.5 text-[13px] font-medium text-rose-700; }
+  .input-invalid { @apply border-rose-400 focus:border-rose-500 focus:ring-rose-500/25; }
+  .form-error { @apply flex items-start gap-2 rounded-[10px] border border-rose-200 bg-rose-50 p-3 text-sm font-medium text-rose-800; }
+
+  /* Badges, chips, status — never color alone: always pair with text/icon */
+  .badge { @apply inline-flex max-w-full shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold; }
+  .badge-slate { @apply badge bg-slate-200/70 text-slate-700; }
+  .badge-blue { @apply badge bg-brand-100 text-brand-700; }
+  .badge-green { @apply badge bg-emerald-100 text-emerald-800; }
+  .badge-red { @apply badge bg-rose-100 text-rose-800; }
+  .badge-amber { @apply badge bg-amber-100 text-amber-900; }
+  .badge-sky { @apply badge bg-sky-100 text-sky-800; }
+
+  /* Segmented control (role pick, sort, P/A, semesters) */
+  .segmented { @apply inline-flex max-w-full gap-1 overflow-x-auto rounded-[12px] border border-slate-200 bg-slate-100 p-1; }
+  .segmented button { @apply min-h-[40px] flex-1 whitespace-nowrap rounded-[8px] px-3.5 py-2 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900; }
+  .segmented button[aria-selected="true"], .segmented button[aria-checked="true"] { @apply bg-white text-brand-700 shadow-sm ring-1 ring-slate-200; }
+
+  /* Underline tabs */
+  .tabs { @apply flex gap-1 overflow-x-auto border-b border-slate-200; }
+  .tabs button, .tabs a { @apply -mb-px whitespace-nowrap border-b-2 border-transparent px-3.5 py-3 text-sm font-semibold text-slate-500 transition-colors hover:text-slate-900; }
+  .tabs [aria-selected="true"] { @apply border-brand-600 text-brand-700; }
+
+  /* Tables → scroll container with sticky first column helper */
+  .table-wrap { @apply overflow-x-auto rounded-[14px] border border-slate-200 bg-white; box-shadow: var(--shadow-card); }
+  table.data { @apply w-full min-w-[560px] border-collapse text-sm; }
+  table.data th { @apply whitespace-nowrap bg-slate-50 px-3 py-2.5 text-left text-[13px] font-semibold text-slate-600; }
+  table.data td { @apply border-t border-slate-100 px-3 py-2.5 align-middle; }
+  table.data tr:hover td { @apply bg-slate-50/60; }
+
+  /* State blocks */
+  .empty { @apply flex flex-col items-center gap-2 rounded-[14px] border border-dashed border-slate-300 bg-white px-6 py-10 text-center; }
+  .skeleton { @apply animate-pulse rounded-[14px] bg-slate-200/80; }
+  .notice { @apply flex items-start gap-2.5 rounded-[10px] border p-3 text-sm leading-snug; }
+  .notice-info { @apply notice border-brand-100 bg-brand-50 text-slate-700; }
+  .notice-warn { @apply notice border-amber-200 bg-amber-50 text-amber-900; }
+
+  /* Dialog */
+  .dialog-overlay { @apply fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 sm:items-center sm:p-6; }
+  .dialog { @apply w-full max-w-md rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl sm:p-6; box-shadow: var(--shadow-pop); animation: dialog-in 160ms ease-out; }
+
+  /* Progress */
+  .progress { @apply h-2 overflow-hidden rounded-full bg-slate-200/80; }
+  .progress > div { @apply h-full rounded-full bg-brand-600 transition-[width]; }
+
+  /* Bottom tab bar (mobile) */
+  .tabbar { @apply fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur; }
+  .tabbar a { @apply flex min-h-[60px] flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-semibold text-slate-500 transition-colors; }
+  .tabbar a[aria-current="page"] { @apply text-brand-700; }
+
+  /* Floating action button (above tab bar) */
+  .fab { @apply fixed bottom-[76px] right-4 z-40 inline-flex min-h-[52px] min-w-[52px] items-center justify-center gap-2 rounded-full bg-brand-600 px-4 text-white shadow-lg transition-transform hover:bg-brand-700 active:scale-95 sm:hidden; box-shadow: var(--shadow-pop); }
+
+  /* Toast */
+  .toast { @apply fixed bottom-[76px] left-1/2 z-[60] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-[12px] px-4 py-3 text-sm font-medium text-white shadow-lg sm:bottom-6; box-shadow: var(--shadow-pop); }
+}
+
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Thin scrollbars for horizontal scrollers */
+.table-wrap::-webkit-scrollbar, .segmented::-webkit-scrollbar, .tabs::-webkit-scrollbar { height: 6px; }
+.table-wrap::-webkit-scrollbar-thumb, .segmented::-webkit-scrollbar-thumb, .tabs::-webkit-scrollbar-thumb { @apply rounded-full bg-slate-300; }
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
